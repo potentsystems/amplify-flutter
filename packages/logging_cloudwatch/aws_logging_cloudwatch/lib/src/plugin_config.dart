@@ -48,6 +48,15 @@ class CloudWatchLoggerPluginConfiguration with AWSDebuggable {
 /// The logging constraint for sending logs to CloudWatch.
 /// {@endtemplate}
 class LoggingConstraint with AWSDebuggable {
+  factory LoggingConstraint.fromJson(Map<String, dynamic> json) {
+    return LoggingConstraint(
+      defaultLogLevel: LogLevel.values.firstWhere(
+        (e) => e.toString() == 'LogLevel.${json['defaultLogLevel']}',
+        orElse: () => LogLevel.error, // Default value if not found
+      ),
+    );
+  }
+
   /// {@macro aws_logging_cloudwatch.logging_constraint}
   const LoggingConstraint({this.defaultLogLevel = LogLevel.error});
 

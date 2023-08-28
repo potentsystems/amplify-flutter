@@ -1,11 +1,15 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import 'dart:convert';
+import 'dart:io';
+
 // TODO(nikahsn): remove after implementing the get loggingConstraint.
 // ignore_for_file: unused_field
 
 import 'package:aws_common/aws_common.dart';
 import 'package:aws_logging_cloudwatch/aws_logging_cloudwatch.dart';
+import 'package:http/http.dart' as http;
 
 /// {@template aws_logging_cloudwatch.remote_logging_constraint_provider}
 /// An Interface to provide custom implementation for
@@ -33,9 +37,83 @@ class DefaultRemoteLoggingConstraintProvider
   final DefaultRemoteConfiguration _config;
   final AWSCredentialsProvider _credentialsProvider;
 
+  LoggingConstraint? _loggingConstraint;
+  DateTime? _lastUpdated;
+
+  Future<void> _saveConstraintLocally(LoggingConstraint constraint) async {
+    final file = File('logging_constraint.json');
+    await file.writeAsString(jsonEncode(constraint));
+  }
+
+  Future<LoggingConstraint?> _getConstraintFromLocalStorage() async {
+    final file = File('logging_constraint.json');
+    if (await file.exists()) {
+      final content = await file.readAsString();
+      return LoggingConstraint.fromJson(
+        jsonDecode(content) as Map<String, dynamic>,
+      );
+    }
+    return null;
+  }
+
+  Future<void> _fetchAndCacheConstraintFromEndpoint() async {
+    try {
+      final constraint = await _fetchConstraintFromEndpoint();
+      if (constraint != null) {
+        _loggingConstraint = constraint;
+        _lastUpdated = DateTime.now();
+      }
+    } catch (error) {
+      print('Error fetching constraints: $error');
+    }
+  }
+
+  Future<LoggingConstraint?> _fetchConstraintFromEndpoint() async {
+    final response = await http.get(Uri.parse(_config.endpoint));
+    if (response.statusCode == 200) {
+      final fetchedConstraint = LoggingConstraint.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+      await _saveConstraintLocally(fetchedConstraint);
+      return fetchedConstraint;
+    }
+    throw Exception(
+      'Failed to fetch logging constraint from ${_config.endpoint}',
+    );
+  }
+
   @override
-  // TODO(nikahsn): add implementation.
-  LoggingConstraint get loggingConstraint => throw UnimplementedError();
+  LoggingConstraint? get loggingConstraint {
+    if (_loggingConstraint != null &&
+        _lastUpdated != null &&
+        DateTime.now().difference(_lastUpdated!).inSeconds <=
+            _config.refreshIntervalInSeconds.inSeconds) {
+      return _loggingConstraint;
+    }
+    // Load from local storage synchronously
+    final file = File('logging_constraint.json');
+    if (file.existsSync()) {
+      final content = file.readAsStringSync();
+      return LoggingConstraint.fromJson(
+        jsonDecode(content) as Map<String, dynamic>,
+      );
+    }
+    return null;
+  }
+
+  /// Initializes and starts the periodic fetch.
+  void initialize() {
+    _fetchAndCacheConstraintFromEndpoint(); // Fetch once immediately on initialize
+    _refreshConstraintPeriodically();
+  }
+
+  /// Refreshes the constraint from the endpoint periodically.
+  Future<void> _refreshConstraintPeriodically() async {
+    while (true) {
+      await Future<void>.delayed(_config.refreshIntervalInSeconds);
+      await _fetchAndCacheConstraintFromEndpoint();
+    }
+  }
 }
 
 /// {@template aws_logging_cloudwatch.default_remote_configuration}
