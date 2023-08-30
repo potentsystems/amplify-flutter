@@ -141,7 +141,6 @@ class DefaultRemoteLoggingConstraintProvider
       _timer = Timer.periodic(_config.refreshIntervalInSeconds, (timer) async {
         await _fetchAndCacheConstraintFromEndpoint();
       });
-      await _fetchAndCacheConstraintFromEndpoint();
     }
   }
 }
