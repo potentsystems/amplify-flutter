@@ -7,7 +7,7 @@ import 'dart:io';
 // TODO(nikahsn): remove after implementing the get loggingConstraint.
 // ignore_for_file: unused_field
 
-import 'package:aws_common/aws_common.dart';
+import 'package:amplify_core/amplify_core.dart';
 import 'package:aws_logging_cloudwatch/aws_logging_cloudwatch.dart';
 import 'package:http/http.dart' as http;
 
@@ -40,6 +40,8 @@ class DefaultRemoteLoggingConstraintProvider
   LoggingConstraint? _loggingConstraint;
   DateTime? _lastUpdated;
 
+  static final _logger = AmplifyLogger('default-remote-config');
+
   Future<void> _saveConstraintLocally(LoggingConstraint constraint) async {
     final file = File('logging_constraint.json');
     await file.writeAsString(jsonEncode(constraint));
@@ -64,7 +66,7 @@ class DefaultRemoteLoggingConstraintProvider
         _lastUpdated = DateTime.now();
       }
     } catch (error) {
-      print('Error fetching constraints: $error');
+      _logger.debug('Error fetching constraints: $error');
     }
   }
 
