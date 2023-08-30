@@ -9,6 +9,7 @@ import 'dart:io';
 
 import 'package:amplify_core/amplify_core.dart';
 import 'package:aws_logging_cloudwatch/aws_logging_cloudwatch.dart';
+import 'package:aws_signature_v4/aws_signature_v4.dart';
 import 'package:http/http.dart' as http;
 
 /// {@template aws_logging_cloudwatch.remote_logging_constraint_provider}
@@ -39,6 +40,12 @@ class DefaultRemoteLoggingConstraintProvider
 
   LoggingConstraint? _loggingConstraint;
   DateTime? _lastUpdated;
+
+  /// The signer to sign the request.
+  static const signer = AWSSigV4Signer();
+
+  /// The scope to sign the request.
+  final scope = AWSCredentialScope(region: 'us-west-2', service: AWSService.s3);
 
   static final _logger = AmplifyLogger('default-remote-config');
 
@@ -71,7 +78,22 @@ class DefaultRemoteLoggingConstraintProvider
   }
 
   Future<LoggingConstraint?> _fetchConstraintFromEndpoint() async {
-    final response = await http.get(Uri.parse(_config.endpoint));
+    final uri = Uri.parse(_config.endpoint);
+
+    final request = AWSHttpRequest(method: AWSHttpMethod.get, uri: uri);
+
+    final signedRequest = await signer.sign(
+      request,
+      credentialScope: scope,
+    );
+
+    final headers = signedRequest.headers.map<String, String>(
+      MapEntry<String, String>.new,
+    );
+
+    final response = await http.get(uri, headers: headers);
+
+    // final response = await http.get(Uri.parse(_config.endpoint));
     if (response.statusCode == 200) {
       final fetchedConstraint = LoggingConstraint.fromJson(
         jsonDecode(response.body) as Map<String, dynamic>,
