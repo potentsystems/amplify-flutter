@@ -26,7 +26,6 @@ void main() {
     localLoggingConstraint: loggingConstraint,
     enable: false,
   );
-
   final errorLog = LogEntry(
     level: LogLevel.error,
     message: 'error message',
@@ -49,7 +48,7 @@ void main() {
       id: 2,
       value: 'second og message',
       timestamp: DateTime.timestamp().toIso8601String(),
-    )
+    ),
   ];
 
   group('enable/disable: ', () {
