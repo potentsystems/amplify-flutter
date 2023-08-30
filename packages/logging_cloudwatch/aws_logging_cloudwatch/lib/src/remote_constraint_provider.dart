@@ -1,6 +1,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -48,6 +49,8 @@ class DefaultRemoteLoggingConstraintProvider
   final scope = AWSCredentialScope(region: 'us-west-2', service: AWSService.s3);
 
   static final _logger = AmplifyLogger('default-remote-config');
+
+  Timer? _timer;
 
   Future<void> _saveConstraintLocally(LoggingConstraint constraint) async {
     final file = File('logging_constraint.json');
@@ -134,7 +137,10 @@ class DefaultRemoteLoggingConstraintProvider
   /// Refreshes the constraint from the endpoint periodically.
   Future<void> _refreshConstraintPeriodically() async {
     while (true) {
-      await Future<void>.delayed(_config.refreshIntervalInSeconds);
+      _timer?.cancel();
+      _timer = Timer.periodic(_config.refreshIntervalInSeconds, (timer) async {
+        await _fetchAndCacheConstraintFromEndpoint();
+      });
       await _fetchAndCacheConstraintFromEndpoint();
     }
   }

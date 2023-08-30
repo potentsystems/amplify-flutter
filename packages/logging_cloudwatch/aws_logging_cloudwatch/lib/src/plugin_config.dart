@@ -3,6 +3,9 @@
 
 import 'package:aws_common/aws_common.dart';
 import 'package:aws_logging_cloudwatch/aws_logging_cloudwatch.dart';
+import 'package:json_annotation/json_annotation.dart';
+
+part 'plugin_config.g.dart';
 
 /// {@template aws_logging_cloudwatch.cloudwatch_logger_plugin_configuration}
 /// The configuration for `CloudWatchLoggerPlugin`.
@@ -47,19 +50,24 @@ class CloudWatchLoggerPluginConfiguration with AWSDebuggable {
 /// {@template aws_logging_cloudwatch.logging_constraint}
 /// The logging constraint for sending logs to CloudWatch.
 /// {@endtemplate}
+
+@JsonSerializable()
 class LoggingConstraint with AWSDebuggable {
   /// {@macro aws_logging_cloudwatch.logging_constraint}
   const LoggingConstraint({this.defaultLogLevel = LogLevel.error});
 
   /// Converts a [Map] to an [LoggingConstraint] instance.
-  factory LoggingConstraint.fromJson(Map<String, dynamic> json) {
-    return LoggingConstraint(
-      defaultLogLevel: LogLevel.values.firstWhere(
-        (e) => e.toString() == 'LogLevel.${json['defaultLogLevel']}',
-        orElse: () => LogLevel.error, // Default value if not found
-      ),
-    );
-  }
+  // factory LoggingConstraint.fromJson(Map<String, dynamic> json) {
+  //   return LoggingConstraint(
+  //     defaultLogLevel: LogLevel.values.firstWhere(
+  //       (e) => e.toString() == 'LogLevel.${json['defaultLogLevel']}',
+  //       orElse: () => LogLevel.error, // Default value if not found
+  //     ),
+  //   );
+  // }
+
+  factory LoggingConstraint.fromJson(Map<String, dynamic> json) =>
+      _$LoggingConstraintFromJson(json);
 
   /// The default [LogLevel] for sending logs to CloudWatch.
   final LogLevel defaultLogLevel;
