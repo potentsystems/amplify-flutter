@@ -74,6 +74,7 @@ class DefaultRemoteLoggingConstraintProvider
       if (constraint != null) {
         _loggingConstraint = constraint;
         _lastUpdated = DateTime.now();
+        await _saveConstraintLocally(constraint);
       }
     } catch (error) {
       _logger.debug('Error fetching constraints: $error');
@@ -101,7 +102,6 @@ class DefaultRemoteLoggingConstraintProvider
       final fetchedConstraint = LoggingConstraint.fromJson(
         jsonDecode(response.body) as Map<String, dynamic>,
       );
-      await _saveConstraintLocally(fetchedConstraint);
       return fetchedConstraint;
     }
     throw Exception(
