@@ -57,17 +57,6 @@ class DefaultRemoteLoggingConstraintProvider
     await file.writeAsString(jsonEncode(constraint));
   }
 
-  Future<LoggingConstraint?> _getConstraintFromLocalStorage() async {
-    final file = File('logging_constraint.json');
-    if (await file.exists()) {
-      final content = await file.readAsString();
-      return LoggingConstraint.fromJson(
-        jsonDecode(content) as Map<String, dynamic>,
-      );
-    }
-    return null;
-  }
-
   Future<void> _fetchAndCacheConstraintFromEndpoint() async {
     try {
       final constraint = await _fetchConstraintFromEndpoint();
@@ -76,6 +65,7 @@ class DefaultRemoteLoggingConstraintProvider
         _lastUpdated = DateTime.now();
         await _saveConstraintLocally(constraint);
       }
+      // ignore: avoid_catches_without_on_clauses
     } catch (error) {
       _logger.debug('Error fetching constraints: $error');
     }
