@@ -10,11 +10,16 @@ on:
         description: The working directory relative to the repo root
         required: true
         type: string
+      runner-os:
+        description: The OS the tests should run on
+        required: false
+        type: string
+        default: ubuntu-latest
 
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner-os }}
     timeout-minutes: 60
     strategy:
       # Allows other matrix items to run if one fails
@@ -82,6 +87,25 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
 
       - name: Run Tests
+        id: testJob
         if: "always() && steps.bootstrap.conclusion == 'success' && steps.testCheck.outputs.hasTests == 'true'"
         run: flutter test
         working-directory: ${{ inputs.working-directory }}
+
+      - name: Check for golden failures
+        if: "always() && steps.testJob.conclusion == 'failure'"
+        id: checkGoldenFailures
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          if [ -d test/ui/failures ]; then
+            echo "hasFailures=true" >> $GITHUB_OUTPUT
+          else
+            echo "hasFailures=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Archive golden failures
+        if: "always() && steps.checkGoldenFailures.outputs.hasFailures == 'true'"
+        uses: actions/upload-artifact@v3
+        with:
+          name: golden-failures-${{ matrix.channel }}-${{ matrix.flutter-version }}
+          path: ${{ inputs.working-directory }}/test/ui/failures/

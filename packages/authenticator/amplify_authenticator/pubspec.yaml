@@ -51,3 +51,7 @@ flutter:
     - family: SocialIcons
       fonts:
         - asset: assets/social-buttons/SocialIcons.ttf
+
+aft:
+  github:
+    custom: true
