@@ -10,6 +10,9 @@ import 'dart:io';
 
 import 'package:amplify_core/amplify_core.dart';
 import 'package:aws_logging_cloudwatch/aws_logging_cloudwatch.dart';
+import 'package:aws_logging_cloudwatch/src/local_storage/io_storage.dart'
+    if (dart.library.html) 'package:aws_logging_cloudwatch/src/local_storage/web_storage.dart'
+    as storage;
 import 'package:aws_signature_v4/aws_signature_v4.dart';
 import 'package:http/http.dart' as http;
 
@@ -53,8 +56,7 @@ class DefaultRemoteLoggingConstraintProvider
   Timer? _timer;
 
   Future<void> _saveConstraintLocally(LoggingConstraint constraint) async {
-    final file = File('logging_constraint.json');
-    await file.writeAsString(jsonEncode(constraint));
+    await storage.saveConstraintLocally(constraint.toJson());
   }
 
   Future<void> _fetchAndCacheConstraintFromEndpoint() async {

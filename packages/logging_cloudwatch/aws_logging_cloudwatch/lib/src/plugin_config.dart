@@ -57,17 +57,11 @@ class LoggingConstraint with AWSDebuggable {
   const LoggingConstraint({this.defaultLogLevel = LogLevel.error});
 
   /// Converts a [Map] to an [LoggingConstraint] instance.
-  // factory LoggingConstraint.fromJson(Map<String, dynamic> json) {
-  //   return LoggingConstraint(
-  //     defaultLogLevel: LogLevel.values.firstWhere(
-  //       (e) => e.toString() == 'LogLevel.${json['defaultLogLevel']}',
-  //       orElse: () => LogLevel.error, // Default value if not found
-  //     ),
-  //   );
-  // }
-
   factory LoggingConstraint.fromJson(Map<String, dynamic> json) =>
       _$LoggingConstraintFromJson(json);
+
+  /// Converts an [LoggingConstraint] instance to a [Map].
+  Map<String, dynamic> toJson() => _$LoggingConstraintToJson(this);
 
   /// The default [LogLevel] for sending logs to CloudWatch.
   final LogLevel defaultLogLevel;
