@@ -30,6 +30,8 @@ jobs:
 
       - name: Install dependencies
         uses: ./.github/composite_actions/install_dependencies
+        with:
+          flutter-version: 3.10.6
 
       - name: Launch iOS simulator
         uses: ./.github/composite_actions/launch_ios_simulator
