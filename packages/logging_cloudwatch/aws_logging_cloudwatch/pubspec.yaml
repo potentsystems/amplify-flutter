@@ -6,6 +6,7 @@ repository: https://github.com/aws-amplify/amplify-flutter/tree/main/packages/aw
 issue_tracker: https://github.com/aws-amplify/amplify-flutter/issues
 
 environment:
+flutter: ">=3.10.0"
   sdk: "^3.0.0"
 
 dependencies:
@@ -15,6 +16,8 @@ dependencies:
   built_collection: ^5.1.1
   built_value: ">=8.6.0 <8.7.0"
   fixnum: ^1.1.0
+  flutter:
+    sdk: flutter
   http: ^1.0.0
   intl: ">=0.18.0 <1.0.0"
   json_annotation: ^4.8.1
