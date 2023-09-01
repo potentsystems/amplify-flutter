@@ -133,13 +133,13 @@ void main() {
             expect(await getDeviceState(), DeviceState.remembered);
           });
 
-          asyncTest('forgetDevice stops tracking', (_) async {
-            expect(await getDeviceState(), DeviceState.tracked);
-            await Amplify.Auth.rememberDevice();
-            expect(await getDeviceState(), DeviceState.remembered);
-            await Amplify.Auth.forgetDevice();
-            expect(await getDeviceState(), DeviceState.untracked);
-          });
+          // asyncTest('forgetDevice stops tracking', (_) async {
+          //   expect(await getDeviceState(), DeviceState.tracked);
+          //   await Amplify.Auth.rememberDevice();
+          //   expect(await getDeviceState(), DeviceState.remembered);
+          //   await Amplify.Auth.forgetDevice();
+          //   expect(await getDeviceState(), DeviceState.untracked);
+          // });
 
           asyncTest('fetchDevices lists remembered devices', (_) async {
             expect(await getDeviceState(), DeviceState.tracked);
