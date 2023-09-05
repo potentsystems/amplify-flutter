@@ -335,6 +335,64 @@ class AmplifyAuthCognitoDart extends AuthPluginInterface
     );
   }
 
+  /// The official implementation of `signInWithWebUI` for web
+  /// loads the hosted UI page in current browser window and then
+  /// redirect back to the web app, which causes reloading of
+  /// web app and losing app state.
+  /// This new implementation handles out the responsibility of
+  /// presenting hosted UI page to the web app, so reloading could
+  /// be avoided, e.g. presenting hosted UI page in a popup window  
+  Future<CognitoSignInResult> signInWithWebUIFromExternal({
+    AuthProvider? provider,
+    required Future<String?> Function(String) externalAuthCodeFetcher,
+  }) async {
+    final stateMachine = _stateMachine.create(HostedUiStateMachine.type);
+    // SignIn uri has to come from state machine since the uri contains
+    // a randomly generated string which will be passed as state and
+    // verified as part of auth code sign process.
+    final signInUri = await stateMachine.getSignInUri(provider);
+
+    final authCodeUrl = await externalAuthCodeFetcher(signInUri.toString());
+    if (authCodeUrl == null) {
+      throw const UserCancelledException('The user cancelled the sign-in flow');
+    }
+
+    final authParameters = OAuthParameters.fromUri(Uri.parse(authCodeUrl));
+    if (authParameters == null) {
+      throw UserCancelledException('Invalid auth callback url: $authCodeUrl');
+    }
+
+    // Do not use `acceptAndComplete`, otherwise stateMachine.stream
+    // won't work properly somehow
+    await _stateMachine
+        .accept(
+          HostedUiEvent.exchange(authParameters!),
+        )
+        .accepted;
+
+    await for (final state in stateMachine.stream) {
+      switch (state) {
+        case HostedUiNotConfigured _:
+        case HostedUiConfiguring _:
+        case HostedUiSigningIn _:
+        case HostedUiSigningOut _:
+        case HostedUiSignedOut _:
+          continue;
+        case HostedUiSignedIn _:
+          return const CognitoSignInResult(
+            isSignedIn: true,
+            nextStep: AuthNextSignInStep(
+              signInStep: AuthSignInStep.done,
+            ),
+          );
+        case HostedUiFailure(:final exception, :final stackTrace):
+          Error.throwWithStackTrace(exception, stackTrace);
+      }
+    }
+
+    throw const UserCancelledException('The user cancelled the sign-in flow');
+  }
+
   @override
   Future<CognitoSignInResult> signInWithWebUI({
     AuthProvider? provider,

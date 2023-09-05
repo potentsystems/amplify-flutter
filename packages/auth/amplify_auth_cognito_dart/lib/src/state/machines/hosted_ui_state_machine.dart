@@ -211,4 +211,8 @@ final class HostedUiStateMachine
     await _platform.close();
     return super.close();
   }
+
+  Future<Uri> getSignInUri(AuthProvider? provider) {
+    return _platform.getSignInUri(provider: provider);
+  }
 }
